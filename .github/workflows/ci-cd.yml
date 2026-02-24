@@ -44,11 +44,11 @@ jobs:
 
           cat deployment.yaml
 
-          
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|image: ghcr.io/${{ github.repository }}:.*|image: ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${{ github.sha }}|g" deployment.yaml
+            sed -i '' "s|image: ghcr.io/.*:.*|image: ghcr.io/${REPO_LOWER}:${{ github.sha }}|g" deployment.yaml
           else
-            sed -i "s|image: ghcr.io/${{ github.repository }}:.*|image: ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${{ github.sha }}|g" deployment.yaml
+            sed -i "s|image: ghcr.io/.*:.*|image: ghcr.io/${REPO_LOWER}:${{ github.sha }}|g" deployment.yaml
           fi
 
           cat deployment.yaml
