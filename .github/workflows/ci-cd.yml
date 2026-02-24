@@ -27,31 +27,26 @@ jobs:
             ghcr.io/sidenigma/kubernetes-cicd-tutorial:latest
             ghcr.io/sidenigma/kubernetes-cicd-tutorial:${{ github.sha }}
       - name: Update GitOps repository
-        shell: bash
+        shell: pwsh
         env:
           GIT_TOKEN: ${{ secrets.GITOPS_PAT }}
         run: |
           # Configure git credential store
           git config --global credential.helper store
-          echo "https://${GIT_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+          echo "https://$env:GIT_TOKEN:x-oauth-basic@github.com" > $env:USERPROFILE\.git-credentials
           
           # Remove any existing gitops directory
-          rm -rf gitops
+          if (Test-Path gitops) { Remove-Item -Recurse -Force gitops }
           
-          # Clone repository using HTTPS URL without token
+          # Clone repository
           git clone https://github.com/sidenigma/grade-api-gitops.git gitops
           cd gitops
-
-          cat deployment.yaml
-
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|image: ghcr.io/.*:.*|image: ghcr.io/${REPO_LOWER}:${{ github.sha }}|g" deployment.yaml
-          else
-            sed -i "s|image: ghcr.io/.*:.*|image: ghcr.io/${REPO_LOWER}:${{ github.sha }}|g" deployment.yaml
-          fi
-
-          cat deployment.yaml
+          Get-Content deployment.yaml
+          
+          $repoLower = "${{ github.repository }}".ToLower()
+          (Get-Content deployment.yaml) -replace 'image: ghcr.io/.*:.*', "image: ghcr.io/$repoLower:${{ github.sha }}" | Set-Content deployment.yaml
+          
+          Get-Content deployment.yaml
           
           # Commit changes
           git config --global user.name "GitHub Actions"
@@ -60,4 +55,4 @@ jobs:
           git commit -m "Update image to ${{ github.sha }}"
           
           # Push
-          git push -f https://${GIT_TOKEN}@github.com/sidenigma/grade-api-gitops.git main
+          git push -f https://$env:GIT_TOKEN@github.com/sidenigma/grade-api-gitops.git main
