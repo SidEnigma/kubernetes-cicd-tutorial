@@ -27,7 +27,7 @@ jobs:
             ghcr.io/sidenigma/kubernetes-cicd-tutorial:latest
             ghcr.io/sidenigma/kubernetes-cicd-tutorial:${{ github.sha }}
       - name: Update GitOps repository
-        shell: pwsh
+        shell: powershell
         env:
           GIT_TOKEN: ${{ secrets.GITOPS_PAT }}
         run: |
